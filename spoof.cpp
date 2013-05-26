@@ -70,14 +70,12 @@ int DLL_EXPORT hook_vdf_fopen(char* name, int mode) {
 int DLL_EXPORT hook_vdf_fseek(int handle, long offset) {
 	if (vdf_keys.find(handle) != vdf_keys.end()) {
 		offset += 4;
-		//std::cout << "fseek " << (int)handle << " " << (long)offset << std::endl;
 	}
 	
 	return vdf_fseek(handle, offset);
 }
 
 int DLL_EXPORT hook_vdf_fclose(int handle) {
-	//std::cout << "fclose " << (int)handle << std::endl;
 	if (vdf_keys.find(handle) != vdf_keys.end()) {
 		delete[] vdf_keys[handle];
 		vdf_keys.erase(handle);
@@ -90,12 +88,7 @@ long DLL_EXPORT hook_vdf_fread(int handle, char* buffer, long len) {
 	long result = vdf_fread(handle, buffer, len);
 	if (vdf_keys.find(handle) != vdf_keys.end()) {
 		long offset = vdf_ftell(handle)-len-4;
-		//std::cout << "fread " << offset << std::endl;
-		//dump_key(vdf_keys[handle]);
-		//std::cout << std::endl;
-		//std::cout << "=> " << (unsigned int)(*(unsigned char*)buffer) << std::endl;
 		crypt_buffer(buffer, len, vdf_keys[handle], offset);
-		//std::cout << "=> " << (unsigned int)(*(unsigned char*)buffer) << std::endl;
 	}
 	return result;
 }
