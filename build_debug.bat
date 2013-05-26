@@ -1,8 +1,7 @@
 set PROMPT=$$ 
 set PATH=C:\MinGW;C:\MinGW\bin
 
-del spoof.o
-del sha1.o
+del *.o
 del vdfs32g.dll
 g++ spoof.cpp -c -lshlwapi -Wall -DDEBUG_FEATURES
 g++ sha1.cpp -c -Wall
