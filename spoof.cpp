@@ -59,7 +59,9 @@ int DLL_EXPORT hook_vdf_fopen(char* name, int mode) {
 			#endif
 			vdf_keys.insert(std::pair<int, key_t>(handle, key));
 		} else {
+			#ifdef DEBUG_FEATURES
 			std::cout << "open " << name << std::endl;
+			#endif
 			vdf_fseek(handle, 0);
 		}
 	}
