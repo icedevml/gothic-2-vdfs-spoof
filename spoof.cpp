@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <shellapi.h>
 #include <shlwapi.h>
+#include <string.h>
 #include <map>
 #include "spoof.h"
 #include "sha1.h"
@@ -39,6 +40,25 @@ void crypt_buffer(char* buffer, unsigned int len,
 	}
 }
 
+bool check_key(int handle, key_t key) {
+	unsigned char key_hash[KEY_LEN];
+	unsigned char file_hash[KEY_LEN];
+	if (vdf_fread(handle, (char*)file_hash, KEY_LEN) != KEY_LEN) {
+		#ifdef DEBUG_FEATURES
+		std::cout << "-> KEY CHECK FAILED! (1)" << std::endl;
+		#endif
+		return false;
+	}
+	sha1::calc(key, KEY_LEN, (key_t)key_hash);
+	if (memcmp((const char*)key_hash, (const char*)file_hash, KEY_LEN) != 0) {
+		#ifdef DEBUG_FEATURES
+		std::cout << "-> KEY CHECK FAILED! (2)" << std::endl;
+		#endif
+		return false;
+	}
+	return true;
+}
+
 int DLL_EXPORT hook_vdf_fopen(char* name, int mode) {
 	int handle = vdf_fopen(name, mode);
 	
@@ -52,6 +72,15 @@ int DLL_EXPORT hook_vdf_fopen(char* name, int mode) {
 			std::cout << "decrypting " << base_name << std::endl;
 			#endif
 			sha1::calc(base_name.c_str(), base_name.size(), key);
+			if (!check_key(handle, key)) {
+				#ifdef DEBUG_FEATURES
+				std::string error_text = "Failed to decrypt file!\n";
+				error_text += name;
+				error_text += "\nKey mismatch!";
+				MessageBox(NULL, error_text.c_str(), "GVC", MB_ICONERROR);
+				#endif
+				return -1;
+			}
 			#ifdef DEBUG_FEATURES
 			std::cout << "-> with key: ";
 			dump_key(key);
@@ -71,7 +100,7 @@ int DLL_EXPORT hook_vdf_fopen(char* name, int mode) {
 
 int DLL_EXPORT hook_vdf_fseek(int handle, long offset) {
 	if (vdf_keys.find(handle) != vdf_keys.end()) {
-		offset += 4;
+		offset += 4+KEY_LEN;
 	}
 	
 	return vdf_fseek(handle, offset);
@@ -89,7 +118,7 @@ int DLL_EXPORT hook_vdf_fclose(int handle) {
 long DLL_EXPORT hook_vdf_fread(int handle, char* buffer, long len) {
 	long result = vdf_fread(handle, buffer, len);
 	if (vdf_keys.find(handle) != vdf_keys.end()) {
-		long offset = vdf_ftell(handle)-len-4;
+		long offset = vdf_ftell(handle)-len-4-KEY_LEN;
 		crypt_buffer(buffer, len, vdf_keys[handle], offset);
 	}
 	return result;
@@ -99,7 +128,7 @@ long DLL_EXPORT hook_vdf_ftell(int handle) {
 	long result = vdf_ftell(handle);
 	
 	if (vdf_keys.find(handle) != vdf_keys.end()) {
-		result -= 4;
+		result -= 4+KEY_LEN;
 	}
 	
 	return result;
