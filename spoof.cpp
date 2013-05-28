@@ -74,12 +74,13 @@ int DLL_EXPORT hook_vdf_fopen(char* name, int mode) {
             #endif
             sha1::calc(base_name.c_str(), base_name.size(), key);
             if (!check_key(handle, key)) {
-                #ifdef DEBUG_FEATURES
-                std::string error_text = "Failed to decrypt file!\n";
+                std::string error_text;
+				error_text.append(1, 'G');
+				error_text.append(1, 'V');
+				error_text.append(1, 'C');
+				error_text.append(1, ':');
                 error_text += name;
-                error_text += "\nKey mismatch!";
-                MessageBox(NULL, error_text.c_str(), "GVC", MB_ICONERROR);
-                #endif
+                MessageBox(NULL, error_text.c_str(), NULL, MB_ICONERROR);
                 return -1;
             }
             #ifdef DEBUG_FEATURES
