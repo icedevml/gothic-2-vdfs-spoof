@@ -1,5 +1,6 @@
 #include <iostream>
 #include <algorithm>
+#include <stdexcept>
 #include <windows.h>
 #include <stdio.h>
 #include <shellapi.h>
@@ -75,12 +76,12 @@ int DLL_EXPORT hook_vdf_fopen(char* name, int mode) {
             sha1::calc(base_name.c_str(), base_name.size(), key);
             if (!check_key(handle, key)) {
                 std::string error_text;
-				error_text.append(1, 'G');
-				error_text.append(1, 'V');
-				error_text.append(1, 'C');
-				error_text.append(1, ':');
+                error_text.append(1, 'G');
+                error_text.append(1, 'V');
+                error_text.append(1, 'C');
+                error_text.append(1, ':');
                 error_text += name;
-                MessageBox(NULL, error_text.c_str(), NULL, MB_ICONERROR);
+                FatalAppExit(0, error_text.c_str());
                 return -1;
             }
             #ifdef DEBUG_FEATURES
