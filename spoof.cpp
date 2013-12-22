@@ -146,12 +146,12 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvRe
     std::cout.sync_with_stdio();
 #endif
 
+#ifdef WITH_GTOOLS
     LPWSTR* szArglist;
     int nArgs;
 
     szArglist = CommandLineToArgvW(GetCommandLineW(), &nArgs);
     if (szArglist == NULL) {
-        wprintf(L"CommandLineToArgvW failed\n");
         return 0;
     } else {
         for(int i = 0; i<nArgs; i++) {
@@ -168,6 +168,7 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvRe
     }
 
     LocalFree(szArglist);
+#endif
 
     return 1;
 }

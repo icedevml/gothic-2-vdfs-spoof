@@ -3,6 +3,8 @@
 
 CC=gcc
 OBJ=sha1.o spoof.o
+OPTIONS=
+#OPTIONS=-WITH_GTOOLS -DEBUG_FEATURES
 
 all: vdfs32g.dll
 
@@ -11,7 +13,7 @@ liborgvdfs32g.a:
 	dlltool -d orgVdfs32g.def -l liborgvdfs32g.a
 
 %.o: %.c
-	$(CC) -O2 $< -c -lshlwapi -Wall
+	$(CC) -O2 $(OPTIONS) $< -c -lshlwapi -Wall
 
 vdfs32g_big.dll: $(OBJ) liborgvdfs32g.a
 	$(CC) -O2 sha1.cpp -c -Wall
