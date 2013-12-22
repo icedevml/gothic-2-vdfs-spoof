@@ -68,8 +68,9 @@ int DLL_EXPORT hook_vdf_fopen(char* name, int mode) {
 
     if (handle >= 0) {
         // check for encrypted file header
-        unsigned int magic;
-        if (vdf_fread(handle, (char*)&magic, 4) == 4 && magic == MAGIC) {
+        uint32_t magic;
+        if (vdf_fread(handle, (char*)&magic, MAGIC_SIZE) == MAGIC_SIZE
+				&& magic == MAGIC) {
             std::string base_name = strip_name(name);
             key_t key = new unsigned char[KEY_LEN];
 #ifdef DEBUG_FEATURES
@@ -101,7 +102,7 @@ int DLL_EXPORT hook_vdf_fopen(char* name, int mode) {
 
 int DLL_EXPORT hook_vdf_fseek(int handle, long offset) {
     if (vdf_keys.find(handle) != vdf_keys.end()) {
-        offset += 4+KEY_LEN;
+        offset += MAGIC_SIZE+KEY_LEN;
     }
 
     return vdf_fseek(handle, offset);
@@ -119,7 +120,7 @@ int DLL_EXPORT hook_vdf_fclose(int handle) {
 long DLL_EXPORT hook_vdf_fread(int handle, char* buffer, long len) {
     long result = vdf_fread(handle, buffer, len);
     if (vdf_keys.find(handle) != vdf_keys.end()) {
-        long offset = vdf_ftell(handle)-len-4-KEY_LEN;
+        long offset = vdf_ftell(handle)-len-MAGIC_SIZE-KEY_LEN;
         crypt_buffer(buffer, len, vdf_keys[handle], offset);
     }
     return result;
@@ -129,7 +130,7 @@ long DLL_EXPORT hook_vdf_ftell(int handle) {
     long result = vdf_ftell(handle);
 
     if (vdf_keys.find(handle) != vdf_keys.end()) {
-        result -= 4+KEY_LEN;
+        result -= MAGIC_SIZE+KEY_LEN;
     }
 
     return result;

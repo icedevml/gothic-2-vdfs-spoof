@@ -1,6 +1,7 @@
 #pragma once
 
-#define MAGIC (unsigned int)(0xC0FFEE24)
+#define MAGIC_SIZE 4
+#define MAGIC (uint32_t)(0xC0FFEE24)
 #define KEY_LEN 20
 typedef unsigned char* key_t;
 
