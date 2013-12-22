@@ -13,11 +13,13 @@
 
 std::map<int, key_t> vdf_keys;
 
+#ifdef DEBUG_FEATURES
 void dump_key(key_t key) {
     char hexstring[41];
     sha1::toHexString(key, hexstring);
     std::cout << hexstring;
 }
+#endif
 
 std::string strip_name(char* name) {
     std::string str(name);
@@ -46,16 +48,16 @@ bool check_key(int handle, key_t key) {
     unsigned char key_hash[KEY_LEN];
     unsigned char file_hash[KEY_LEN];
     if (vdf_fread(handle, (char*)file_hash, KEY_LEN) != KEY_LEN) {
-        #ifdef DEBUG_FEATURES
+#ifdef DEBUG_FEATURES
         std::cout << "-> KEY CHECK FAILED! (1)" << std::endl;
-        #endif
+#endif
         return false;
     }
     sha1::calc(key, KEY_LEN, (key_t)key_hash);
     if (memcmp((const char*)key_hash, (const char*)file_hash, KEY_LEN) != 0) {
-        #ifdef DEBUG_FEATURES
+#ifdef DEBUG_FEATURES
         std::cout << "-> KEY CHECK FAILED! (2)" << std::endl;
-        #endif
+#endif
         return false;
     }
     return true;
@@ -70,30 +72,26 @@ int DLL_EXPORT hook_vdf_fopen(char* name, int mode) {
         if (vdf_fread(handle, (char*)&magic, 4) == 4 && magic == MAGIC) {
             std::string base_name = strip_name(name);
             key_t key = new unsigned char[KEY_LEN];
-            #ifdef DEBUG_FEATURES
+#ifdef DEBUG_FEATURES
             std::cout << "decrypting " << base_name << std::endl;
-            #endif
+#endif
             sha1::calc(base_name.c_str(), base_name.size(), key);
             if (!check_key(handle, key)) {
-                std::string error_text;
-                error_text.append(1, 'G');
-                error_text.append(1, 'V');
-                error_text.append(1, 'C');
-                error_text.append(1, ':');
+                std::string error_text = "GVC: KEY FAIL:";
                 error_text += name;
                 FatalAppExit(0, error_text.c_str());
                 return -1;
             }
-            #ifdef DEBUG_FEATURES
+#ifdef DEBUG_FEATURES
             std::cout << "-> with key: ";
             dump_key(key);
             std::cout << std::endl;
-            #endif
+#endif
             vdf_keys.insert(std::pair<int, key_t>(handle, key));
         } else {
-            #ifdef DEBUG_FEATURES
+#ifdef DEBUG_FEATURES
             std::cout << "open " << name << std::endl;
-            #endif
+#endif
             vdf_fseek(handle, 0);
         }
     }
@@ -142,11 +140,11 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvRe
         return 1;
     }
 
-    #ifdef DEBUG_FEATURES
+#ifdef DEBUG_FEATURES
     AllocConsole();
     freopen("CONOUT$", "w", stdout);
     std::cout.sync_with_stdio();
-    #endif
+#endif
 
     LPWSTR* szArglist;
     int nArgs;
