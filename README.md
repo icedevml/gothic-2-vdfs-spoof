@@ -1,0 +1,1 @@
+A simple layer between Gothic 2 engine and it's virtual filesystem. Allows to encrypt game assets (like textures, models, worlds, etc.) with a simple XOR cipher. Created for some modders on their request.
